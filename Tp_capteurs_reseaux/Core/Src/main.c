@@ -104,7 +104,7 @@ int main(void)
 			&cmd,
 			1,
 			1000)
-			!= HAL_OK){ printf("xErreur Transmit1\r\n");
+			!= HAL_OK){ printf("xErreur Transmit\r\n");
 	}
 
 	if (HAL_I2C_Master_Receive(
@@ -123,34 +123,85 @@ int main(void)
 	uint8_t config_ctrlMes = 0b01010111; // 010: temperature, 101: press, 11: mode normal
 	uint8_t mess_ctrlMes[2] = {reg_ctrlMes,config_ctrlMes};
 	if (HAL_I2C_Master_Transmit(
-				&hi2c1,
-				(uint16_t)(0x77<<1),
-				mess_ctrlMes,
-				2,
-				1000)
-				!= HAL_OK){ printf("xErreur Transmit1\r\n");
-		}
+			&hi2c1,
+			(uint16_t)(0x77<<1),
+			mess_ctrlMes,
+			2,
+			1000)
+			!= HAL_OK){ printf("xErreur Transmit\r\n");
+	}
 
-		if (HAL_I2C_Master_Receive(
-				&hi2c1,
-				(uint16_t)(0x77<<1),
-				&SlaveResponse,
-				1,
-				1000)
-				!= HAL_OK){ printf("xErreur Receive\r\n");
-		}
-		printf(">Config Control: 0x%02X\r\n",SlaveResponse);
+	if (HAL_I2C_Master_Receive(
+			&hi2c1,
+			(uint16_t)(0x77<<1),
+			&SlaveResponse,
+			1,
+			1000)
+			!= HAL_OK){ printf("xErreur Receive\r\n");
+	}
+	printf(">Config Control: 0x%02X\r\n",SlaveResponse);
 
 	/*
-	 * 		RECUPERATION ETALONNAGE, TEMPERATURE ET PRESSION
+	 * 		------- RÉCUPÉRATION ÉTALONNAGE, TEMPÉRATURE ET PRESSION -------
 	 */
+	uint8_t coeff_TEMP[3*2];
+	uint8_t reg_trimming_TEMP=0x88;
+	HAL_I2C_Master_Transmit(
+			&hi2c1,(uint16_t)(0x77<<1),
+			&reg_trimming_TEMP,
+			1,1000);
+	HAL_I2C_Master_Receive(
+			&hi2c1,(uint16_t)(0x77<<1),
+			coeff_TEMP,
+			3*2, 1000); // Tout est sotcké sur 16 bits donc on regarde 2 fois 8 bits
+
+	for (int i = 0; i < 3; i++){ // For temperature coeff
+		uint16_t coeff = coeff_TEMP[i]+coeff_TEMP[i+1];
+		printf("Coeff %i : %u\r\n",i,coeff);
+		i++; // Pour regarder les valeurs 2 a 2
+	}
+
 	/* USER CODE END 2 */
 
 	/* Infinite loop */
 	/* USER CODE BEGIN WHILE */
 	while (1)
 	{
+		uint8_t reg_TEMP = 0xF7;
+		uint8_t reg_PRESS = 0xFA;
 
+		uint8_t rep_TEMP[3];
+		uint8_t rep_PRESS[3];
+		HAL_I2C_Master_Transmit(&hi2c1,(uint16_t)(0x77<<1),
+				&reg_TEMP,
+				1,1000);
+
+		HAL_I2C_Master_Receive(&hi2c1,(uint16_t)(0x77<<1),
+				&rep_TEMP,
+				3, 1000); // TEMP ecrit sur 20 bits
+
+		HAL_I2C_Master_Transmit(&hi2c1,(uint16_t)(0x77<<1),
+				&reg_PRESS,
+				1,1000);
+
+		HAL_I2C_Master_Receive(&hi2c1,(uint16_t)(0x77<<1),
+				&rep_PRESS,
+				3, 1000); // PRESS écrit sur 20 bits
+
+		uint32_t PRESS=0;
+		for (int i = 0; i<3;i++){
+			PRESS += rep_PRESS[i]>>(8*i);
+		}
+
+		/* CALCUL DE LA TEMP REEL */
+		uint32_t TEMP=0;
+		for (int i = 0; i<3;i++){
+			TEMP += rep_TEMP[i]>>(8*i);
+		}
+
+
+		printf("TEMP: %u\r\nPRESS: %u\r\n",rep_TEMP,rep_PRESS);
+		HAL_Delay(500);
 		/* USER CODE END WHILE */
 
 		/* USER CODE BEGIN 3 */
