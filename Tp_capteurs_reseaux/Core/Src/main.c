@@ -22,6 +22,7 @@
 #include "i2c.h"
 #include "usart.h"
 #include "gpio.h"
+#include "BMP280.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -94,8 +95,10 @@ int main(void)
 	MX_USART1_UART_Init();
 	MX_CAN2_Init();
 	/* USER CODE BEGIN 2 */
-	uint8_t cmd = 0xD0;
+
+/*	uint8_t cmd = 0xD0;
 	uint8_t SlaveResponse;
+	uint8_t adressI2C = 0x77;
 
 	printf("\r\n=== START I2C ===\r\n");
 	if (HAL_I2C_Master_Transmit(
@@ -116,15 +119,15 @@ int main(void)
 			!= HAL_OK){ printf("xErreur Receive\r\n");
 	}
 	printf(">ID Slave: 0x%02X\r\n",SlaveResponse);
-	/*
+
 	 * 		CONFIGURATION DU CONTROLE MESURE
-	 */
+
 	uint8_t reg_ctrlMes = 0xF4;
-	uint8_t config_ctrlMes = 0b01010111; // 010: temperature, 101: press, 11: mode normal
+	uint8_t config_ctrlMes = 0b01010111; // 010: temperature (oversampling x2), 101: pression (oversampling x16), 11: mode normal
 	uint8_t mess_ctrlMes[2] = {reg_ctrlMes,config_ctrlMes};
 	if (HAL_I2C_Master_Transmit(
 			&hi2c1,
-			(uint16_t)(0x77<<1),
+			(uint16_t)(adressI2C<<1),
 			mess_ctrlMes,
 			2,
 			1000)
@@ -133,7 +136,7 @@ int main(void)
 
 	if (HAL_I2C_Master_Receive(
 			&hi2c1,
-			(uint16_t)(0x77<<1),
+			(uint16_t)(adressI2C<<1),
 			&SlaveResponse,
 			1,
 			1000)
@@ -141,17 +144,21 @@ int main(void)
 	}
 	printf(">Config Control: 0x%02X\r\n",SlaveResponse);
 
-	/*
+
 	 * 		------- RÉCUPÉRATION ÉTALONNAGE, TEMPÉRATURE ET PRESSION -------
-	 */
+
+
+
+	 * 		------- TEMERATURE ------
+
 	uint8_t coeff_TEMP[3*2];
 	uint8_t reg_trimming_TEMP=0x88;
 	HAL_I2C_Master_Transmit(
-			&hi2c1,(uint16_t)(0x77<<1),
+			&hi2c1,(uint16_t)(adressI2C<<1),
 			&reg_trimming_TEMP,
 			1,1000);
 	HAL_I2C_Master_Receive(
-			&hi2c1,(uint16_t)(0x77<<1),
+			&hi2c1,(uint16_t)(adressI2C<<1),
 			coeff_TEMP,
 			3*2, 1000); // Tout est sotcké sur 16 bits donc on regarde 2 fois 8 bits
 
@@ -161,47 +168,163 @@ int main(void)
 		i++; // Pour regarder les valeurs 2 a 2
 	}
 
+
+
+
+	 * 		------- PRESSION ------
+
+
+	uint8_t coeff_PRESS[9*2];
+	uint8_t reg_trimming_PRESS=0x8E;
+	HAL_I2C_Master_Transmit(
+			&hi2c1,(uint16_t)(adressI2C<<1),
+			&reg_trimming_PRESS,
+			1,1000);
+	HAL_I2C_Master_Receive(
+			&hi2c1,(uint16_t)(adressI2C<<1),
+			coeff_PRESS,
+			9*2, 1000); // Tout est sotcké sur 16 bits donc on regarde 2 fois 8 bits
+
+	for (int i = 0; i < 9; i++){ // For temperature coeff
+		uint16_t coeff = coeff_PRESS[i]+coeff_PRESS[i+1];
+		printf("Coeff pression %i : %u\r\n",i,coeff);
+		i++; // Pour regarder les valeurs 2 a 2
+	}
+
+	for (int i = 0; i<3; i++){
+		uint16_t coeff = coeff_PRESS[i]+coeff_PRESS[i+1];
+		printf("Coeff %i : %u\r\n",i,coeff);
+		i++;
+	}
+
+
+	 * ------ Fonctions pour le calcul des valeurs ----
+	 *
+
+
+	uint32_t compensate_temperature(uint32_t raw_temp, uint8_t *coeff) {
+	    int32_t var1 = ((((raw_temp >> 3) - ((int32_t)coeff[0] << 1))) * ((int32_t)coeff[1])) >> 11;
+	    int32_t var2 = (((((raw_temp >> 4) - ((int32_t)coeff[0])) * ((raw_temp >> 4) - ((int32_t)coeff[0]))) >> 12) * ((int32_t)coeff[2])) >> 14;
+	    int32_t t_fine = var1 + var2;
+	    int32_t T = (t_fine * 5 + 128) >> 8;
+	    return T; // Température compensée
+
+	}
+
+	uint32_t compensate_pressure(uint32_t raw_press, uint8_t *coeff, uint32_t t_fine) {
+	    int64_t var1, var2, p;
+	    var1 = ((int64_t)t_fine) - 128000;
+	    var2 = var1 * var1 * (int64_t)coeff[5];
+	    var2 = var2 + ((var1 * (int64_t)coeff[4]) << 17);
+	    var2 = var2 + (((int64_t)coeff[3]) << 35);
+	    var1 = ((var1 * var1 * (int64_t)coeff[2]) >> 8) + ((var1 * (int64_t)coeff[1]) << 12);
+	    var1 = (((((int64_t)1) << 47) + var1)) * ((int64_t)coeff[0]) >> 33;
+	    if (var1 == 0) {
+	        return 0;
+	    }
+	    p = 1048576 - raw_press;
+	    p = (((p << 31) - var2) * 3125) / var1;
+	    var1 = ((int64_t)coeff[8] * (p >> 13) * (p >> 13)) >> 25;
+	    var2 = ((int64_t)coeff[7] * p) >> 19;
+	    p = ((p + var1 + var2) >> 8) + ((int64_t)coeff[6] << 4);
+	    return p; // Pression compensée
+	}
+
+
+
+
+	*/
+
+
+
+
+	printf("\r\nChecking for BMP280\r\n");
+	BMP280_check();
+	printf("\r\nConfigure BMP280\r\n");
+	BMP280_init();
+
+
+
+
+
+
+
+
+
 	/* USER CODE END 2 */
 
 	/* Infinite loop */
 	/* USER CODE BEGIN WHILE */
 	while (1)
 	{
-		uint8_t reg_TEMP = 0xF7;
+		/*uint8_t reg_TEMP = 0xF7;
 		uint8_t reg_PRESS = 0xFA;
 
 		uint8_t rep_TEMP[3];
 		uint8_t rep_PRESS[3];
-		HAL_I2C_Master_Transmit(&hi2c1,(uint16_t)(0x77<<1),
-				&reg_TEMP,
-				1,1000);
 
-		HAL_I2C_Master_Receive(&hi2c1,(uint16_t)(0x77<<1),
-				&rep_TEMP,
-				3, 1000); // TEMP ecrit sur 20 bits
+		HAL_I2C_Master_Transmit(&hi2c1,(uint16_t)(adressI2C<<1), &reg_TEMP,1,1000);
+		// TEMP ecrit sur 20 bits
+		HAL_I2C_Master_Receive(&hi2c1,(uint16_t)(adressI2C<<1), rep_TEMP, 3, 1000);
 
-		HAL_I2C_Master_Transmit(&hi2c1,(uint16_t)(0x77<<1),
-				&reg_PRESS,
-				1,1000);
+		HAL_I2C_Master_Transmit(&hi2c1,(uint16_t)(adressI2C<<1), &reg_PRESS, 1,1000);
+		// PRESS écrit sur 20 bits
+		HAL_I2C_Master_Receive(&hi2c1,(uint16_t)(adressI2C<<1), rep_PRESS, 3, 1000);
 
-		HAL_I2C_Master_Receive(&hi2c1,(uint16_t)(0x77<<1),
-				&rep_PRESS,
-				3, 1000); // PRESS écrit sur 20 bits
 
-		uint32_t PRESS=0;
-		for (int i = 0; i<3;i++){
+		//uint32_t PRESS=0;
+		for (int i = 0; i<9;i++){
 			PRESS += rep_PRESS[i]>>(8*i);
+			printf("pressure value %i: rep_PRESS[%i]",i , rep_PRESS[i]);
 		}
+		int32_t PRESS = ((uint32_t)(rep_PRESS[0]) << 12) | ((uint32_t)(rep_PRESS[1]) << 4) | (rep_PRESS[2] >> 4);
 
-		/* CALCUL DE LA TEMP REEL */
-		uint32_t TEMP=0;
+
+
+		 CALCUL DE LA TEMP REEL
+
+		//uint32_t TEMP=0;
+
 		for (int i = 0; i<3;i++){
 			TEMP += rep_TEMP[i]>>(8*i);
+			printf("pressure value %i: rep_TEMP[%i]",i , rep_TEMP[i]);
 		}
 
+		int32_t TEMP = ((uint32_t)(rep_TEMP[0]) << 12) | ((uint32_t)(rep_TEMP[1]) << 4) | (rep_TEMP[2] >> 4);
 
-		printf("TEMP: %u\r\nPRESS: %u\r\n",rep_TEMP,rep_PRESS);
-		HAL_Delay(500);
+
+		printf("non compressé : TEMP: %u\r\nPRESS: %u\r\n",TEMP,PRESS);
+
+
+
+		// Calculer la température compensée
+		uint32_t T = compensate_temperature(TEMP, coeff_TEMP);
+
+		// Calculer la pression compensée
+		uint32_t p = compensate_pressure(PRESS, coeff_PRESS, T);
+
+		printf("compréssé : TEMP: %u\r\nPRESS: %u\r\n",T,p);
+
+
+		HAL_Delay(5000);*/
+
+
+
+
+
+
+
+
+
+
+		BMP280_get_temperature();
+		BMP280_get_pressure();
+	    HAL_Delay(1000);
+
+
+
+
+
 		/* USER CODE END WHILE */
 
 		/* USER CODE BEGIN 3 */
