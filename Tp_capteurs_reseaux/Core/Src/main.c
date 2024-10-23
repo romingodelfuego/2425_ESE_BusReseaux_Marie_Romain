@@ -27,6 +27,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "stdio.h"
+#include <string.h>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -41,11 +42,8 @@
 
 /* Private macro -------------------------------------------------------------*/
 /* USER CODE BEGIN PM */
-/*
-int __io_putchar(char ch){
-	HAL_UART_Transmit(&huart2, (uint8_t*)&ch, 1, HAL_MAX_DELAY);
-	return ch;
-}*/
+
+
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
@@ -62,6 +60,11 @@ void SystemClock_Config(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+/*
+int __io_putchar(char ch){
+	HAL_UART_Transmit(&huart2, (uint8_t*)&ch, 1, HAL_MAX_DELAY);
+	return ch;
+}*/
 
 /* USER CODE END 0 */
 
@@ -248,10 +251,9 @@ int main(void)
 	BMP280_init();
 
 
-
-
-
-
+	uint8_t Rx_data;
+	char Rx_Buffer[100];
+	uint8_t Rx_index = 0;
 
 
 
@@ -261,6 +263,104 @@ int main(void)
 	/* USER CODE BEGIN WHILE */
 	while (1)
 	{
+
+
+
+
+		/*
+		 * COMMUNICATION AVEC RASBERRY PI
+		 */
+
+
+		/*
+		 * RECEIVE AVEC RASBERRY PI
+		 */
+
+
+		BMP280_U32_t p = compensate_pressure();
+		BMP280_S32_t t = compensate_temperature();
+		printf("pression compensée :%d \r\n",p);
+		printf("temperature compensée :%d \r\n",t);
+
+
+
+		HAL_UART_Receive(&huart1,  (uint8_t*)&Rx_data, 1, 1000);
+		printf("receive %d\r\n", Rx_data);
+		Rx_Buffer[Rx_index++] = Rx_data;
+		printf("Buffer: %s\r\n", Rx_Buffer);
+
+
+		if (Rx_data == '\r' || Rx_data == '\n')
+		{
+			if (strcmp(Rx_Buffer, "get_t\r") == 0 || strcmp(Rx_Buffer, "get_t\n") == 0)
+			{
+				int32_t get_t;
+				get_t = BMP280_get_temperature();
+				char value[20];
+				int size = sprintf(value, "\r\n%ld\r\n", get_t);
+				HAL_UART_Transmit(&huart1, (uint8_t*)value, size - 1, 1000);
+
+			}
+
+			if (strcmp(Rx_Buffer, "get_p\r") == 0 || strcmp(Rx_Buffer, "get_p\n") == 0)
+			{
+				int32_t get_p;
+				get_p = BMP280_get_pressure();
+				char value[20];
+				int size = sprintf(value, "\r\n%ld\r\n", get_p);
+				HAL_UART_Transmit(&huart1, (uint8_t*)value, size - 1, 1000);
+
+
+			}
+			Rx_index = 0;
+			memset(Rx_Buffer, 0, sizeof(Rx_Buffer));
+		}
+
+		if (Rx_index >= sizeof(Rx_Buffer) - 1)
+		{
+			Rx_index = 0;
+			memset(Rx_Buffer, 0, sizeof(Rx_Buffer));
+		}
+
+
+
+
+		/*
+		 *	SEND TEMPERATURE
+		 */
+
+		/*
+		int32_t get_t;
+		get_t = BMP280_get_temperature();
+
+		char value[20];
+		int size = sprintf(value, "\r\n%ld\r\n", get_t);
+		HAL_UART_Transmit(&huart1, (uint8_t*)value, size - 1, 1000);
+		printf("send temperature %s \r\n ", value);
+
+		HAL_Delay(1000);
+		*/
+
+
+
+
+
+		/*
+		 * ENVOIE AVEC RASBERRY PI
+		 */
+		/*
+
+		char value[] = "rom\r\n";
+		HAL_UART_Transmit(&huart1, (uint8_t*)value, sizeof(value) - 1, 1000);
+		printf("send temperature %s \r\n ", value);
+
+		HAL_Delay(1000);
+		*/
+
+
+
+		// marie part
+
 		/*uint8_t reg_TEMP = 0xF7;
 		uint8_t reg_PRESS = 0xFA;
 
@@ -314,19 +414,7 @@ int main(void)
 
 
 
-		/*
-		 * COMMUNICATION AVEC RASBERRY PI
-		 */
-		//char pData;
-		//HAL_UART_Receive(&huart1, (uint8_t*)&pData, 1, 1000);
-		//printf("value: %c\r\n", pData); // Afficher la valeur reçue
-		//HAL_Delay(100);
 
-
-
-		BMP280_get_temperature();
-		BMP280_get_pressure();
-		HAL_Delay(1000);
 
 
 

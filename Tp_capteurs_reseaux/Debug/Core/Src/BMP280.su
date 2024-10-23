@@ -1,6 +1,10 @@
 ../Core/Src/BMP280.c:32:5:BMP280_check	24	static
-../Core/Src/BMP280.c:58:5:BMP280_init	16	static
-../Core/Src/BMP280.c:75:5:BMP280_Write_Reg	32	static
-../Core/Src/BMP280.c:98:10:BMP280_Read_Reg	32	static
-../Core/Src/BMP280.c:117:14:BMP280_get_temperature	16	static
-../Core/Src/BMP280.c:136:5:BMP280_get_pressure	16	static
+../Core/Src/BMP280.c:59:9:get_coef_temperature	32	static
+../Core/Src/BMP280.c:72:9:get_coef_pressure	72	static
+../Core/Src/BMP280.c:95:5:BMP280_init	16	static
+../Core/Src/BMP280.c:113:5:BMP280_Write_Reg	32	static
+../Core/Src/BMP280.c:136:10:BMP280_Read_Reg	32	static
+../Core/Src/BMP280.c:155:14:BMP280_get_temperature	16	static
+../Core/Src/BMP280.c:173:5:BMP280_get_pressure	16	static
+../Core/Src/BMP280.c:193:14:compensate_temperature	24	static
+../Core/Src/BMP280.c:205:14:compensate_pressure	328	static

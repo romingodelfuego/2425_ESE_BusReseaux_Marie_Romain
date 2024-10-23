@@ -47,6 +47,8 @@
 /* Private variables ---------------------------------------------------------*/
 /* USER CODE BEGIN PV */
 extern UART_HandleTypeDef huart2;
+extern UART_HandleTypeDef huart1;
+
 
 /* USER CODE END PV */
 
