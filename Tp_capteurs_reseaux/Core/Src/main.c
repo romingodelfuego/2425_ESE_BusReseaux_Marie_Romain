@@ -41,7 +41,11 @@
 
 /* Private macro -------------------------------------------------------------*/
 /* USER CODE BEGIN PM */
-
+/*
+int __io_putchar(char ch){
+	HAL_UART_Transmit(&huart2, (uint8_t*)&ch, 1, HAL_MAX_DELAY);
+	return ch;
+}*/
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
@@ -310,17 +314,19 @@ int main(void)
 
 
 
-
-
-
-
+		/*
+		 * COMMUNICATION AVEC RASBERRY PI
+		 */
+		//char pData;
+		//HAL_UART_Receive(&huart1, (uint8_t*)&pData, 1, 1000);
+		//printf("value: %c\r\n", pData); // Afficher la valeur reçue
+		//HAL_Delay(100);
 
 
 
 		BMP280_get_temperature();
 		BMP280_get_pressure();
-	    HAL_Delay(1000);
-
+		HAL_Delay(1000);
 
 
 

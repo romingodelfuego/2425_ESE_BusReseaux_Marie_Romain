@@ -7,23 +7,23 @@ Idx Name          Size      VMA       LMA       File off  Algn
                   CONTENTS, ALLOC, LOAD, READONLY, DATA
   1 .text         000053d4  080001d0  080001d0  000011d0  2**4
                   CONTENTS, ALLOC, LOAD, READONLY, CODE
-  2 .rodata       00000174  080055a4  080055a4  000065a4  2**2
+  2 .rodata       0000016c  080055a4  080055a4  000065a4  2**2
                   CONTENTS, ALLOC, LOAD, READONLY, DATA
-  3 .ARM.extab    00000000  08005718  08005718  00007068  2**0
+  3 .ARM.extab    00000000  08005710  08005710  00007068  2**0
                   CONTENTS
-  4 .ARM          00000008  08005718  08005718  00006718  2**2
+  4 .ARM          00000008  08005710  08005710  00006710  2**2
                   CONTENTS, ALLOC, LOAD, READONLY, DATA
-  5 .preinit_array 00000000  08005720  08005720  00007068  2**0
+  5 .preinit_array 00000000  08005718  08005718  00007068  2**0
                   CONTENTS, ALLOC, LOAD, DATA
-  6 .init_array   00000004  08005720  08005720  00006720  2**2
+  6 .init_array   00000004  08005718  08005718  00006718  2**2
                   CONTENTS, ALLOC, LOAD, READONLY, DATA
-  7 .fini_array   00000004  08005724  08005724  00006724  2**2
+  7 .fini_array   00000004  0800571c  0800571c  0000671c  2**2
                   CONTENTS, ALLOC, LOAD, READONLY, DATA
-  8 .data         00000068  20000000  08005728  00007000  2**2
+  8 .data         00000068  20000000  08005720  00007000  2**2
                   CONTENTS, ALLOC, LOAD, DATA
-  9 .bss          0000027c  20000068  08005790  00007068  2**2
+  9 .bss          0000027c  20000068  08005788  00007068  2**2
                   ALLOC
- 10 ._user_heap_stack 00000604  200002e4  08005790  000072e4  2**0
+ 10 ._user_heap_stack 00000604  200002e4  08005788  000072e4  2**0
                   ALLOC
  11 .ARM.attributes 00000030  00000000  00000000  00007068  2**0
                   CONTENTS, READONLY
@@ -37,15 +37,15 @@ Idx Name          Size      VMA       LMA       File off  Algn
                   CONTENTS, READONLY, DEBUGGING, OCTETS
  16 .debug_macro  00023703  00000000  00000000  00019b06  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 17 .debug_line   00011d2a  00000000  00000000  0003d209  2**0
+ 17 .debug_line   00011d26  00000000  00000000  0003d209  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 18 .debug_str    000cf79e  00000000  00000000  0004ef33  2**0
+ 18 .debug_str    000cf79e  00000000  00000000  0004ef2f  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 19 .comment      00000043  00000000  00000000  0011e6d1  2**0
+ 19 .comment      00000043  00000000  00000000  0011e6cd  2**0
                   CONTENTS, READONLY
- 20 .debug_frame  00003bb8  00000000  00000000  0011e714  2**2
+ 20 .debug_frame  00003bb8  00000000  00000000  0011e710  2**2
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 21 .debug_line_str 0000006c  00000000  00000000  001222cc  2**0
+ 21 .debug_line_str 0000006c  00000000  00000000  001222c8  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
 
 Disassembly of section .text:
@@ -749,7 +749,8 @@ BMP280_S32_t BMP280_get_temperature() {
 	printf("Temperature: ");
  80007c4:	4807      	ldr	r0, [pc, #28]	@ (80007e4 <BMP280_get_temperature+0x58>)
  80007c6:	f004 f8c3 	bl	8004950 <iprintf>
-	printf("0X%05lX", adc_T);
+	//printf("0X%05lX", adc_T);
+	printf("%d", adc_T);
  80007ca:	6839      	ldr	r1, [r7, #0]
  80007cc:	4806      	ldr	r0, [pc, #24]	@ (80007e8 <BMP280_get_temperature+0x5c>)
  80007ce:	f004 f8bf 	bl	8004950 <iprintf>
@@ -767,7 +768,7 @@ BMP280_S32_t BMP280_get_temperature() {
  80007e2:	bf00      	nop
  80007e4:	0800566c 	.word	0x0800566c
  80007e8:	0800567c 	.word	0x0800567c
- 80007ec:	08005684 	.word	0x08005684
+ 80007ec:	08005680 	.word	0x08005680
 
 080007f0 <BMP280_get_pressure>:
 
@@ -812,7 +813,8 @@ int BMP280_get_pressure() {
 	printf("Pressure:    0x");
  8000828:	4807      	ldr	r0, [pc, #28]	@ (8000848 <BMP280_get_pressure+0x58>)
  800082a:	f004 f891 	bl	8004950 <iprintf>
-	printf("%05lX", adc_P);
+	//printf("%05lX", adc_P);
+	printf("%u", adc_P);
  800082e:	6839      	ldr	r1, [r7, #0]
  8000830:	4806      	ldr	r0, [pc, #24]	@ (800084c <BMP280_get_pressure+0x5c>)
  8000832:	f004 f88d 	bl	8004950 <iprintf>
@@ -828,9 +830,9 @@ int BMP280_get_pressure() {
  8000842:	46bd      	mov	sp, r7
  8000844:	bd80      	pop	{r7, pc}
  8000846:	bf00      	nop
- 8000848:	08005688 	.word	0x08005688
- 800084c:	08005698 	.word	0x08005698
- 8000850:	08005684 	.word	0x08005684
+ 8000848:	08005684 	.word	0x08005684
+ 800084c:	08005694 	.word	0x08005694
+ 8000850:	08005680 	.word	0x08005680
 
 08000854 <MX_CAN2_Init>:
 
@@ -1362,8 +1364,8 @@ int main(void)
  8000b5c:	f003 ff60 	bl	8004a20 <puts>
 	BMP280_init();
  8000b60:	f7ff fd6c 	bl	800063c <BMP280_init>
-
-
+		//printf("value: %c\r\n", pData); // Afficher la valeur reçue
+		//HAL_Delay(100);
 
 
 
@@ -1371,14 +1373,14 @@ int main(void)
  8000b64:	f7ff fe12 	bl	800078c <BMP280_get_temperature>
 		BMP280_get_pressure();
  8000b68:	f7ff fe42 	bl	80007f0 <BMP280_get_pressure>
-	    HAL_Delay(1000);
+		HAL_Delay(1000);
  8000b6c:	f44f 707a 	mov.w	r0, #1000	@ 0x3e8
  8000b70:	f000 fb18 	bl	80011a4 <HAL_Delay>
 		BMP280_get_temperature();
  8000b74:	bf00      	nop
  8000b76:	e7f5      	b.n	8000b64 <main+0x34>
- 8000b78:	080056a0 	.word	0x080056a0
- 8000b7c:	080056b8 	.word	0x080056b8
+ 8000b78:	08005698 	.word	0x08005698
+ 8000b7c:	080056b0 	.word	0x080056b0
 
 08000b80 <SystemClock_Config>:
 /**
@@ -2474,7 +2476,7 @@ LoopFillZerobss:
   ldr r1, =_edata
  80010ac:	20000068 	.word	0x20000068
   ldr r2, =_sidata
- 80010b0:	08005728 	.word	0x08005728
+ 80010b0:	08005720 	.word	0x08005720
   ldr r2, =_sbss
  80010b4:	20000068 	.word	0x20000068
   ldr r4, =_ebss
@@ -7243,7 +7245,7 @@ HAL_StatusTypeDef HAL_RCC_ClockConfig(RCC_ClkInitTypeDef  *RCC_ClkInitStruct, ui
  8002c32:	bf00      	nop
  8002c34:	40023c00 	.word	0x40023c00
  8002c38:	40023800 	.word	0x40023800
- 8002c3c:	080056cc 	.word	0x080056cc
+ 8002c3c:	080056c4 	.word	0x080056c4
  8002c40:	20000000 	.word	0x20000000
  8002c44:	20000004 	.word	0x20000004
 
@@ -7291,7 +7293,7 @@ uint32_t HAL_RCC_GetPCLK1Freq(void)
  8002c7c:	4618      	mov	r0, r3
  8002c7e:	bd80      	pop	{r7, pc}
  8002c80:	40023800 	.word	0x40023800
- 8002c84:	080056dc 	.word	0x080056dc
+ 8002c84:	080056d4 	.word	0x080056d4
 
 08002c88 <HAL_RCC_GetPCLK2Freq>:
   * @note   Each time PCLK2 changes, this function must be called to update the
@@ -7317,7 +7319,7 @@ uint32_t HAL_RCC_GetPCLK2Freq(void)
  8002ca4:	4618      	mov	r0, r3
  8002ca6:	bd80      	pop	{r7, pc}
  8002ca8:	40023800 	.word	0x40023800
- 8002cac:	080056dc 	.word	0x080056dc
+ 8002cac:	080056d4 	.word	0x080056d4
 
 08002cb0 <HAL_RCC_GetSysClockFreq>:
   *
@@ -11642,10 +11644,10 @@ static void UART_SetConfig(UART_HandleTypeDef *huart)
  8004a9e:	4798      	blx	r3
  8004aa0:	3601      	adds	r6, #1
  8004aa2:	e7f2      	b.n	8004a8a <__libc_init_array+0x1e>
- 8004aa4:	08005720 	.word	0x08005720
- 8004aa8:	08005720 	.word	0x08005720
- 8004aac:	08005720 	.word	0x08005720
- 8004ab0:	08005724 	.word	0x08005724
+ 8004aa4:	08005718 	.word	0x08005718
+ 8004aa8:	08005718 	.word	0x08005718
+ 8004aac:	08005718 	.word	0x08005718
+ 8004ab0:	0800571c 	.word	0x0800571c
 
 08004ab4 <__retarget_lock_init_recursive>:
  8004ab4:	4770      	bx	lr
@@ -11992,11 +11994,11 @@ static void UART_SetConfig(UART_HandleTypeDef *huart)
  8004db8:	4630      	mov	r0, r6
  8004dba:	f000 f879 	bl	8004eb0 <_printf_i>
  8004dbe:	e7e4      	b.n	8004d8a <_vfiprintf_r+0x1e6>
- 8004dc0:	080056e4 	.word	0x080056e4
- 8004dc4:	080056ee 	.word	0x080056ee
+ 8004dc0:	080056dc 	.word	0x080056dc
+ 8004dc4:	080056e6 	.word	0x080056e6
  8004dc8:	00000000 	.word	0x00000000
  8004dcc:	08004b7f 	.word	0x08004b7f
- 8004dd0:	080056ea 	.word	0x080056ea
+ 8004dd0:	080056e2 	.word	0x080056e2
 
 08004dd4 <_printf_common>:
  8004dd4:	e92d 47f0 	stmdb	sp!, {r4, r5, r6, r7, r8, r9, sl, lr}
@@ -12327,8 +12329,8 @@ static void UART_SetConfig(UART_HandleTypeDef *huart)
  80050e0:	f104 0619 	add.w	r6, r4, #25
  80050e4:	e7f5      	b.n	80050d2 <_printf_i+0x222>
  80050e6:	bf00      	nop
- 80050e8:	080056f5 	.word	0x080056f5
- 80050ec:	08005706 	.word	0x08005706
+ 80050e8:	080056ed 	.word	0x080056ed
+ 80050ec:	080056fe 	.word	0x080056fe
 
 080050f0 <__sflush_r>:
  80050f0:	f9b1 200c 	ldrsh.w	r2, [r1, #12]

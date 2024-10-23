@@ -126,7 +126,8 @@ BMP280_S32_t BMP280_get_temperature() {
 	free(buf);
 
 	printf("Temperature: ");
-	printf("0X%05lX", adc_T);
+	//printf("0X%05lX", adc_T);
+	printf("%d", adc_T);
 	printf("\r\n");
 
 	return adc_T;
@@ -144,7 +145,8 @@ int BMP280_get_pressure() {
 	free(buf);
 
 	printf("Pressure:    0x");
-	printf("%05lX", adc_P);
+	//printf("%05lX", adc_P);
+	printf("%u", adc_P);
 	printf("\r\n");
 
 	return 0;
