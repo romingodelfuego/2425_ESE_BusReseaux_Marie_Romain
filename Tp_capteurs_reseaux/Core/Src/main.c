@@ -22,12 +22,12 @@
 #include "i2c.h"
 #include "usart.h"
 #include "gpio.h"
-#include "BMP280.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "stdio.h"
 #include <string.h>
+#include "BMP280.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -37,7 +37,9 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-
+#define CAN
+//#define I2C
+#define I2Cinit
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -98,36 +100,72 @@ int main(void)
 	/* Initialize all configured peripherals */
 	MX_GPIO_Init();
 	MX_USART2_UART_Init();
-	MX_I2C1_Init();
 	MX_USART1_UART_Init();
-	MX_CAN2_Init();
+	MX_CAN1_Init();
+	MX_I2C1_Init();
 	/* USER CODE BEGIN 2 */
+#ifdef CAN
+	printf("START\r\n");
+	if(HAL_CAN_Start(&hcan1)==HAL_ERROR){printf("Erreur initialisation\r\n");}
 
+	CAN_TxHeaderTypeDef pHeader =(CAN_TxHeaderTypeDef){
+		.StdId = 0x62,
+				.ExtId = 0x01,
+				.IDE = CAN_ID_STD,
+				.RTR = CAN_RTR_DATA,
+				.DLC = 0x02,
+				.TransmitGlobalTime = DISABLE
+	};
+	uint32_t pTxMailbox;
+	HAL_CAN_AddTxMessage(&hcan1, &pHeader, NULL, &pTxMailbox);
 
+	//FONCTION POUR MODIFIER L'ANGLE DU MOTEUR
+	/*
+	 *
+	for (int i = 0;i<100;i++){
+		uint8_t sens = i%2;
+		uint8_t aData[2]= {0x55,sens};
+		printf("Avant envoie CAN ,nb: %lu\r\n",HAL_CAN_IsTxMessagePending(&hcan1, pTxMailbox));
+		if (HAL_CAN_AddTxMessage(&hcan1, &pHeader, aData, &pTxMailbox)!= HAL_OK){printf("Erreur Sending\r\n");}
+		printf("Apres envoie CAN ,nb: %lu\r\n",HAL_CAN_IsTxMessagePending(&hcan1, pTxMailbox));
+		HAL_Delay(2000);
 
-
-
+	}
+	 */
+#endif
+#ifdef I2Cinit
 	printf("\r\nChecking for BMP280\r\n");
 	BMP280_check();
 	printf("\r\nConfigure BMP280\r\n");
 	BMP280_init();
-
-
-	uint8_t Rx_data;
-	char Rx_Buffer[100];
-	uint8_t Rx_index = 0;
-
+#endif
 
 
 	/* USER CODE END 2 */
 
 	/* Infinite loop */
 	/* USER CODE BEGIN WHILE */
+	pHeader.StdId=0x61;
+	uint8_t sens;
+	uint32_t temp_ref =  BMP280_get_temperature();
 	while (1)
 	{
+		uint32_t temp =  BMP280_get_temperature();
+		uint8_t angle = (uint8_t)((temp_ref-temp)/2);
+		if (angle >180){sens=0x01;}
+		else{sens=0x00;}
+		printf("angle  : %u°\r\n", angle);
+		uint8_t aData[2] = {angle,sens};
+		HAL_CAN_AddTxMessage(&hcan1, &pHeader, aData, &pTxMailbox);
+		printf("moteur actualisé\r\n");
+		HAL_Delay(1000);
+		temp_ref = temp;
 
 
-#ifdef RASBERRY
+
+
+
+#ifdef I2C
 
 		/*
 		 * COMMUNICATION AVEC RASBERRY PI
@@ -143,8 +181,6 @@ int main(void)
 		//BMP280_S32_t t = compensate_temperature();
 		//printf("pression compensée :%d \r\n",p);
 		//printf("temperature compensée :%d \r\n",t);
-
-
 
 		HAL_UART_Receive(&huart1,  (uint8_t*)&Rx_data, 1, 1000);
 		printf("receive %d\r\n", Rx_data);
@@ -201,7 +237,7 @@ int main(void)
 		printf("send temperature %s \r\n ", value);
 
 		HAL_Delay(1000);
-		*/
+		 */
 
 
 
@@ -217,9 +253,10 @@ int main(void)
 		printf("send temperature %s \r\n ", value);
 
 		HAL_Delay(1000);
-		*/
+		 */
 
 #endif
+
 
 
 
@@ -271,7 +308,7 @@ void SystemClock_Config(void)
 			|RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
 	RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
 	RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
-	RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV4;
+	RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV2;
 	RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV2;
 
 	if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_2) != HAL_OK)
