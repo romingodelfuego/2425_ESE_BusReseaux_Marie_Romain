@@ -115,3 +115,32 @@ Nous avons donc écrit la valeur 0b01010111 qui vaut 0x57 en hexadécimal dans l
 <p align="center">
   <img src="Images/config.png" alt="Configure BMP280" width="600" height="auto">
 </p>
+
+##### Récupération de l'étalonnage, de la température et de la pression
+
+Maintenant on veut récupérer les valeurs de la température et de la pression et envoyez sur le port série le valeurs 32 bit non compensées de la pression de la température. Pour cela il faut envoyer l'adresse du registre et ensuite on reçoit l'étalonnage dans un tableau adapté. L'adresse du registre est donnée par la documentation :
+
+<p align="center">
+  <img src="Images/memory_map.png" alt="carte des registres d'étalonnage" width="600" height="auto">
+</p>
+
+Le registre d'étalonnage est ici notre point d'intérêt, et son adresse correspond à celle du premier élément du tableau, soit 0x88. Nous devons donc transmettre cette adresse, puis recevoir les données d'étalonnage dans un tableau de 26 éléments. Ensuite, nous avons organisé les données d'étalonnage dans le format approprié pour effectuer le calcul de compensation.
+
+<p align="center">
+  <img src="Images/etalonnage.png" alt="Registres d'étalonnage" width="600" height="auto">
+</p>
+
+On va donc à l'aide des indications d'étalonnage creer deux focntion get_pressure et get_temperature qui vont permettre de réccupérer la température grâce aux différents registres. 
+<p align="center">
+  <img src="Images/get_pressure.png" alt="Fonction pour obtenir la température" width="600" height="auto">
+</p>
+
+##### Calcul des températures et des pression compensées
+
+Pour cette dernière partie , une fois qu on a récupéré la température et la pression nous devons la compenser pour pouvoir l'intérpréter correctement et pour que ces valeurs soient au bon format. Pour cela nous avons juste a copier les codes présents dans la documentation page 45 et 46 :
+<p align="center">
+  <img src="Images/compensation.png" alt="Température et pression compensées" width="600" height="auto">
+</p>
+
+
+
