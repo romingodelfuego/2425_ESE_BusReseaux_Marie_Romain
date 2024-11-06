@@ -66,12 +66,52 @@ Dans cette partie, nous avons determiné les broches pour configurer le Bus CAN,
 
 - Pour la connexion à l'aide du bus CAN entre le moteur et la STM32 : Rx -> PB8; Tx -> PB9
 - Pour la connexion USART2 entre le port USB et la STM32 : Rx ->PA3 ; Tx -> PA2
-- Pour la connexion USART3 entre la Rasberry Pi et la STM32 : Rx -> PC5 ; Tx -> PB10
+- Pour la connexion USART1 entre la Raspberry Pi et la STM32 : Rx -> PA9 ; Tx -> PA10
 - Pour la conneion I2C entre le capteur BMP280 et la STM32 : SDA -> PB7 ; SCL -> PB6
 
+On commence par s'intéresser dans un premier temps à la redirection du printf. Pour cela dans le fichier stm32f4xx_hal_msp.c, on ajoute du code permettant de gérer le printf, à l’aide de putchar. Lors du test, il ne faut pas oublier le \r\n pour que le message s’affiche directement.
+<p align="center">
+  <img src="Images/printf.png" alt="Registres de pression" width="600" height="auto">
+</p>
 
+### Communication I²C
 
+#### Communication avec le BMP280
 
+On utilise les fonctions Transmit et Receive de la bibliothèque HAL pour établir la communication I²C. 
 
+- HAL_StatusTypeDef HAL_I2C_Master_Transmit(I2C_HandleTypeDef *hi2c, uint16_t DevAddress, uint8_t *pData, uint16_t Size, uint32_t Timeout)
+- HAL_StatusTypeDef HAL_I2C_Master_Receive(I2C_HandleTypeDef *hi2c, uint16_t DevAddress, uint8_t *pData, uint16_t Size, uint32_t Timeout)
 
+Où on a :
 
+- I2C_HandleTypeDef hi2c: structure stockant les informations du contrôleur I²C
+- uint16_t DevAddress: adresse I³C du périphérique Slave avec lequel on souhaite interagir.
+- uint8_t *pData: buffer de données
+- uint16_t Size: taille du buffer de données
+- uint32_t Timeout: peut prendre la valeur HAL_MAX_DELAY
+
+Cependant, il est important de noter que ces fonctions exigent une adresse de 8 bits, tandis que l'adresse I²C est, elle, codée sur 7 bits. Par conséquent, il est nécessaire de décaler l'adresse I²C d'un bit vers la gauche avant de l'utiliser avec les fonctions HAL.
+
+##### Identification du BMP280
+Dans un premier temps, il faut identifier notre capteur pour cela nous devons lire la valeur du registre ID (0xD0). On doit donc envoyer l'adresse du registre ID, 0xD0, et recevoir 1 octet correspondant au contenu du registre, 0x58, on fait cela avec les fonctions HAL_StatusTypeDef HAL_I2C_Master_Receive et HAL_StatusTypeDef HAL_I2C_Master_Transmit. On va construire une fonction qui va renvoyer la valeur du registre 0xD0.
+
+<p align="center">
+  <img src="Images/id_capteur.png" alt="Obtenir l'ID du capteur" width="600" height="auto">
+</p>
+
+Après éxécution de ce code nous obtenons 88 soit en hexadécimal 0x58, c'est ce qu on souhaitait obtenir.
+
+##### Configuration du BMP280
+
+On va donc à présent configurer le BMP280 en mode normal avec une Pressure oversampling = x16 et une Temperature oversampling = x2. On va utiliser la documentation et découvrir que le regitsre de contrôle 0xF4 vu précédemment permet de configurer tous ces éléments. En effet :
+
+- Pressure oversampling : x16 -> 101
+- Temperature oversampling : x2 -> 010
+- mode normal : 11
+
+Nous avons donc écrit la valeur 0b01010111 qui vaut 0x57 en hexadécimal dans le registre 0xF4.
+
+<p align="center">
+  <img src="Images/config.png" alt="Configure BMP280" width="600" height="auto">
+</p>
