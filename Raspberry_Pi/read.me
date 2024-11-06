@@ -1,0 +1,43 @@
+Raspberry pi
+Sur raspberry pi imager, on flash la SD avec : 
+Raspebrry pi OS(other) -> Rasperbry pi os lite(32-bit)
+
+Configurer sur le raspberry pi imager 
+le ssid et le mdp de la wifi
+
+Ensuite en passant par le finder ou le terminal 
+Ajouter un fichier ssh (vide)
+et modifier les fichiers cmdline.txt et config.txt
+
+La carte SD est prête a être connecter au réseau et recevoir une invitation ssh 
+
+On connecte la carte sd a la rasberry pi et on alimente
+
+On souhaite ensuite se connecter en ssh via l’ordinateur. Il faut se connecter ua meme reseau que le ssid rentrée dans la sd tout a l’heure
+Il faut ensuite reperer l’adresse IP que le routeur a associer a la raspberry
+
+pour cela on utilise nmap sur le terminal
+>nmap 192.168.88.0/24 -sn
+pour scanner rapidement le reseau (il faut être en utilisateur root pour faire cette operation 
+> sudo -i
+)
+
+On cherche ensuite toutes les ip qui sont associé a des raspberry pi Foundation
+
+On tente de se connecter a chacune d’elle jusqu’a trouver la bonne 
+
+> ssh …(adresse-ip)
+Pour communiquer avec la rasberry pi on utilise minicom
+> minicom -D /dev/ttyAMA0
+
+Lorsque l’on accede sur une page web a l’adresse 192.168.88….. on ne peut pour l’instant que faire des request GET
+
+alors pour simuler un comportement POST par des boutons par exemple on utilisera le terminal 
+
+voici comment on passe des arguments dans une methodes POST
+
+>curl -X POST http://192.168.88.234:5000/api/welcome/ -d "welcome"
+
+Cette commande post sur l’adresse /api/welcome/ l’argument welcome
+
+pour recupérer les données coté raspberry on doit utilisé request.get()
