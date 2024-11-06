@@ -2,7 +2,7 @@
 
 Bienvenue sur le ReadMe de Romain Pace et Marie Caronello, élèves en spécialité ESE à l'ENSEA. Ce document présente en détail les étapes de notre TP, avec pour objectif d'approfondir notre compréhension des bus et des réseaux.
 
-## TP1 - Bus I2C
+## Présentation
 
 L’objectif de ce TP est de collecter les données du capteur BMP280 via le microcontrôleur STM32, puis de gérer ces données à l’aide d’une interface API. La figure ci-dessous présente l’architecture générale du système :
 
@@ -142,7 +142,21 @@ Pour cette dernière partie , une fois qu on a récupéré la température et la
   <img src="Images/compensation.png" alt="Température et pression compensées" width="600" height="auto">
 </p>
 
+## TP2 - Interfaçage STM32 - Raspberry
 
+## TP3 - Interface REST
+
+## TP4 - Bus CAN
+
+L'objectif ici est de mettre en place un périphérique sur un bus CAN entre le moteur et la carte STM32L476. On devra donc ici réussir à piloter un module moteur pas-à-pas alimenté en 12V via le bus CAN, en réglant la vitesse de communication à 500 kbit/s, en prenant en compte des spécificités techniques liées au ratio de timing CAN.
+
+On definit donc le CAN tel que Rx -> PB8 et Tx -> PB9. Deplus on veut que la vitesse du CAN soit de 500kbit/s ainsi on doit mettre le prescaler à 6, le Time Quanta in bit Segment 1 à 12 et le Time Quanta in bit Segment 2 à 2. 
+
+Deplus pour perfectionner la configuration on s'intéresse à l'angle tel que donné dans la documentation, on choisit de se mettre en mode manuel. 
+
+<p align="center">
+  <img src="Images/angle.png" alt="Configuration de l'angle en mode manuel" width="600" height="auto">
+</p>
 
 
 
