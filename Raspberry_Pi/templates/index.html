@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Graphique avec Transition et Fenêtre Glissante</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+</head>
+<body>
+    <h1>Graphique avec Transition et Fenêtre Glissante</h1>
+    <div id="graph"></div>
+
+    <script>
+        // Variables globales pour stocker les données du graphique
+        let xData = [];
+        let yData = [];
+        const MAX_POINTS = 50; // Nombre de points maximum à afficher à la fois
+
+        // Fonction pour récupérer les données du graphique
+        async function fetchGraphData() {
+            // Exemple de récupération des nouvelles données via une API
+            const response = await fetch('/get-graph-data');
+            const data = await response.json();
+
+            // Mettre à jour les données des points, et limiter à MAX_POINTS
+            xData.push(data.x);
+            yData.push(data.y);
+
+            // Si le nombre de points dépasse 50, on les réduit pour garder les 50 derniers
+            if (xData.length > MAX_POINTS) {
+                xData.shift();
+                yData.shift();
+            }
+
+            // Préparer le tracé pour Plotly
+            const trace = {
+                x: xData,
+                y: yData,
+                type: 'scatter',
+                mode: 'lines+markers',
+                marker: { color: 'blue', size: 8 },
+                line: { color: 'blue', width: 2 }
+            };
+
+            // Configuration du layout
+            const layout = {
+                title: 'Graphique avec Transition',
+                xaxis: { title: 'Temps' },
+                yaxis: { title: 'Valeur' },
+                showlegend: false,
+                xaxis: {
+                    range: [Math.max(0, xData[xData.length - MAX_POINTS] || 0), xData[xData.length - 1] || 0], // fenêtre glissante sur les derniers 50 points
+                },
+                updatemenus: [{
+                    buttons: [{
+                        args: [null, { frame: { duration: 500, redraw: true }, fromcurrent: true }],
+                        label: 'Play',
+                        method: 'animate'
+                    }],
+                    direction: 'left',
+                    pad: { r: 10, t: 87 },
+                    showactive: false,
+                    type: 'buttons',
+                    x: 0.1,
+                    xanchor: 'right',
+                    y: 0,
+                    yanchor: 'top'
+                }]
+            };
+
+            // Définir les frames pour l'animation de la ligne et des points
+            const frames = [];
+            for (let i = 0; i < xData.length; i++) {
+                frames.push({
+                    name: `frame${i}`,
+                    data: [{
+                        type: 'scatter',
+                        mode: 'lines+markers',
+                        x: xData.slice(0, i + 1),  // Affiche les points jusqu'à l'index i
+                        y: yData.slice(0, i + 1),
+                        marker: { color: 'blue', size: 8 },
+                        line: { color: 'blue', width: 2 }
+                    }]
+                });
+            }
+
+            // Mettre à jour le graphique avec l'animation
+            Plotly.react('graph', [trace], layout);
+            Plotly.animate('graph', frames, {
+                transition: {
+                    duration: 500,  // Durée de chaque transition
+                    easing: 'cubic-in-out'  // Type de transition
+                },
+                frame: {
+                    duration: 500,  // Durée de chaque frame
+                    redraw: true
+                }
+            });
+        }
+
+        // Actualiser les données toutes les 2 secondes
+        setInterval(fetchGraphData, 2000);
+
+        // Appeler la fonction immédiatement pour afficher le graphique au chargement
+        fetchGraphData();
+    </script>
+</body>
+</html>
