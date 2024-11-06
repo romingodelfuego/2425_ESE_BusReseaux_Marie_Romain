@@ -60,6 +60,16 @@ Avant de configurer le capteur BMP280 nous allons identifier certains éléments
 
 Ce TP a permis de comprendre les principaux registres et leurs rôles dans la configuration et la lecture des données du capteur BMP280 via le bus I²C. 
 
+###  Setup du STM32
+
+Dans cette partie, nous avons determiné les broches pour configurer le Bus CAN, l'USART2, l'USART3 et la communication I2C.
+
+- Pour la connexion à l'aide du bus CAN entre le moteur et la STM32 : Rx -> PB8; Tx -> PB9
+- Pour la connexion USART2 entre le port USB et la STM32 : Rx ->PA3 ; Tx -> PA2
+- Pour la connexion USART3 entre la Rasberry Pi et la STM32 : Rx -> PC5 ; Tx -> PB10
+- Pour la conneion I2C entre le capteur BMP280 et la STM32 : SDA -> PB7 ; SCL -> PB6
+
+
 
 
 
