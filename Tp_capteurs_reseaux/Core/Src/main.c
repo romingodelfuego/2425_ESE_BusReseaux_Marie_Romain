@@ -26,8 +26,11 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "stdio.h"
-#include <string.h>
+#include "string.h"
 #include "BMP280.h"
+#include "motor.h"
+#include "define.h"
+#include "shell.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -37,9 +40,7 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-#define CAN
-//#define I2C
-#define I2Cinit
+
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -62,11 +63,7 @@ void SystemClock_Config(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-/*
-int __io_putchar(char ch){
-	HAL_UART_Transmit(&huart2, (uint8_t*)&ch, 1, HAL_MAX_DELAY);
-	return ch;
-}*/
+
 
 /* USER CODE END 0 */
 
@@ -108,36 +105,13 @@ int main(void)
 	printf("START\r\n");
 	if(HAL_CAN_Start(&hcan1)==HAL_ERROR){printf("Erreur initialisation\r\n");}
 
-	CAN_TxHeaderTypeDef pHeader =(CAN_TxHeaderTypeDef){
-		.StdId = 0x62,
-				.ExtId = 0x01,
-				.IDE = CAN_ID_STD,
-				.RTR = CAN_RTR_DATA,
-				.DLC = 0x02,
-				.TransmitGlobalTime = DISABLE
-	};
-	uint32_t pTxMailbox;
-	HAL_CAN_AddTxMessage(&hcan1, &pHeader, NULL, &pTxMailbox);
 
-	//FONCTION POUR MODIFIER L'ANGLE DU MOTEUR
-	/*
-	 *
-	for (int i = 0;i<100;i++){
-		uint8_t sens = i%2;
-		uint8_t aData[2]= {0x55,sens};
-		printf("Avant envoie CAN ,nb: %lu\r\n",HAL_CAN_IsTxMessagePending(&hcan1, pTxMailbox));
-		if (HAL_CAN_AddTxMessage(&hcan1, &pHeader, aData, &pTxMailbox)!= HAL_OK){printf("Erreur Sending\r\n");}
-		printf("Apres envoie CAN ,nb: %lu\r\n",HAL_CAN_IsTxMessagePending(&hcan1, pTxMailbox));
-		HAL_Delay(2000);
-
-	}
-	 */
 #endif
-#ifdef I2Cinit
-	printf("\r\nChecking for BMP280\r\n");
+#ifdef BMP280
+	printf("------BMP280------\r\n");
 	BMP280_check();
-	printf("\r\nConfigure BMP280\r\n");
 	BMP280_init();
+	uint32_t temp_ref =  BMP280_get_temperature();
 #endif
 
 
@@ -145,28 +119,30 @@ int main(void)
 
 	/* Infinite loop */
 	/* USER CODE BEGIN WHILE */
-	pHeader.StdId=0x61;
-	uint8_t sens;
-	uint32_t temp_ref =  BMP280_get_temperature();
 	while (1)
 	{
+#ifdef MOTOR
 		uint32_t temp =  BMP280_get_temperature();
 		uint8_t angle = (uint8_t)((temp_ref-temp)/2);
-		if (angle >180){sens=0x01;}
-		else{sens=0x00;}
+
+		if (angle >180){
+			motor_Angle(CLOCKWISE,90);
+		}
+		else{
+			motor_Angle(ANTI_CLOCKWISE,90);
+
+		}
 		printf("angle  : %u°\r\n", angle);
-		uint8_t aData[2] = {angle,sens};
-		HAL_CAN_AddTxMessage(&hcan1, &pHeader, aData, &pTxMailbox);
 		printf("moteur actualisé\r\n");
 		HAL_Delay(1000);
 		temp_ref = temp;
-
-
-
-
-
-#ifdef I2C
-
+#endif
+#ifdef SHELLV1
+		shellv1();
+#endif
+#ifdef SHELLV2
+		shellv2();
+#endif
 		/*
 		 * COMMUNICATION AVEC RASBERRY PI
 		 */
@@ -181,46 +157,6 @@ int main(void)
 		//BMP280_S32_t t = compensate_temperature();
 		//printf("pression compensée :%d \r\n",p);
 		//printf("temperature compensée :%d \r\n",t);
-
-		HAL_UART_Receive(&huart1,  (uint8_t*)&Rx_data, 1, 1000);
-		printf("receive %d\r\n", Rx_data);
-		Rx_Buffer[Rx_index++] = Rx_data;
-		printf("Buffer: %s\r\n", Rx_Buffer);
-
-
-		if (Rx_data == '\r' || Rx_data == '\n')
-		{
-			if (strcmp(Rx_Buffer, "get_t\r") == 0 || strcmp(Rx_Buffer, "get_t\n") == 0)
-			{
-				int32_t get_t;
-				get_t = BMP280_get_temperature();
-				char value[20];
-				int size = sprintf(value, "\r\n%ld\r\n", get_t);
-				HAL_UART_Transmit(&huart1, (uint8_t*)value, size - 1, 1000);
-
-			}
-
-			if (strcmp(Rx_Buffer, "get_p\r") == 0 || strcmp(Rx_Buffer, "get_p\n") == 0)
-			{
-				int32_t get_p;
-				get_p = BMP280_get_pressure();
-				char value[20];
-				int size = sprintf(value, "\r\n%ld\r\n", get_p);
-				HAL_UART_Transmit(&huart1, (uint8_t*)value, size - 1, 1000);
-
-
-			}
-			Rx_index = 0;
-			memset(Rx_Buffer, 0, sizeof(Rx_Buffer));
-		}
-
-		if (Rx_index >= sizeof(Rx_Buffer) - 1)
-		{
-			Rx_index = 0;
-			memset(Rx_Buffer, 0, sizeof(Rx_Buffer));
-		}
-
-
 
 
 		/*
@@ -254,14 +190,6 @@ int main(void)
 
 		HAL_Delay(1000);
 		 */
-
-#endif
-
-
-
-
-
-
 
 
 		/* USER CODE END WHILE */

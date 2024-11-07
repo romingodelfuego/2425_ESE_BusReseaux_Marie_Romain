@@ -1,0 +1,5 @@
+../Core/Src/shell.c:21:6:shellv1	8
+../Core/Src/shell.c:58:6:shellv2	6
+../Core/Src/shell.c:82:6:subfunct_GET_T	1
+../Core/Src/shell.c:88:6:subfunct_GET_P	1
+../Core/Src/shell.c:94:6:subfunct_SET_K	1
