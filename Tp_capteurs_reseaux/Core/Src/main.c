@@ -114,6 +114,11 @@ int main(void)
 	uint32_t temp_ref =  BMP280_get_temperature();
 #endif
 
+#ifdef ADXL345
+	printf("------BMP280------\r\n");
+	ADXL345_check();
+	ADXL345_init();
+#endif
 
 	/* USER CODE END 2 */
 
@@ -143,6 +148,27 @@ int main(void)
 #ifdef SHELLV2
 		shellv2();
 #endif
+
+
+#ifdef ADXL345
+	/*
+	 * SEND COORDINATES X, Y, Z
+	 * */
+
+	int16_t x, y, z;
+	char message[50];
+	if (ADXL345_read_axes(&x, &y, &z) == 0) {
+		snprintf(message, sizeof(message), "X: %d, Y: %d, Z: %d\r\n", x, y, z);
+		HAL_UART_Transmit(&huart1, (uint8_t*)message, strlen(message), HAL_MAX_DELAY);
+	}
+	else {
+		char error_message[] = "Erreur lors de la lecture des axes\r\n";
+		HAL_UART_Transmit(&huart1, (uint8_t*)error_message, strlen(error_message), HAL_MAX_DELAY);
+	}
+#endif
+
+
+
 		/*
 		 * COMMUNICATION AVEC RASBERRY PI
 		 */
