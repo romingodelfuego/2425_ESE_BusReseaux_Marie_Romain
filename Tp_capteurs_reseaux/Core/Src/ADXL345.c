@@ -13,6 +13,9 @@
 #include "ADXL345.h"
 #include "define.h"
 
+extern I2C_HandleTypeDef hi2c1;
+
+uint8_t ADXL345_ADDR =  0x53 << 1;
 uint8_t ADXL345_DEVID_REG = 0x00;  // ID du périphérique
 uint8_t ADXL345_DEVID_VAL = 0xE5;
 uint8_t ADXL345_POWER_CTL = 0x2D;  // Contrôle de l'alimentation
@@ -23,6 +26,8 @@ uint8_t ADXL345_DATAY0 = 0x34;  // LSB de l'axe Y
 uint8_t ADXL345_DATAY1 = 0x35;  // MSB de l'axe Y
 uint8_t ADXL345_DATAZ0 = 0x36;  // LSB de l'axe Z
 uint8_t ADXL345_DATAZ1 = 0x37;  // MSB de l'axe Z
+
+
 
 int  ADXL345_check() {
 
@@ -73,7 +78,8 @@ int ADXL345_init(){
 		return 1;
 	}
 
-	data = 0x08; // Mode de mesure
+	// Mode de mesure
+	uint8_t data = 0x08;
 	ret = HAL_I2C_Master_Transmit(&hi2c1, ADXL345_ADDR, &data, 1, HAL_MAX_DELAY);
 	if (ret != HAL_OK) {
 		printf("Error while configuring Power Control register\r\n");
@@ -174,7 +180,7 @@ int ADXL345_read_axes(int16_t* x, int16_t* y, int16_t* z) {
     }
     *z = (int16_t)((data[1] << 8) | data[0]);
 
-    printf("X: %d, Y: %d, Z: %d\r\n", x, y, z);
+    printf("X: lu, Y: %lu, Z: %lu\r\n", x, y, z);
     return 0;
 
 }
