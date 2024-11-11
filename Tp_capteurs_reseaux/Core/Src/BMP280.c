@@ -58,10 +58,10 @@ int BMP280_check() {
 
 	printf("Id: 0x%x...", buf[0]);
 	if (buf[0] == BMP280_ID_VAL) {
-		printf("Ok\r\n");
+		printf("BMP280 Ok\r\n");
 		return 0;
 	} else {
-		printf("not Ok!\r\n");
+		printf("BMP280 not Ok!\r\n");
 		return 1;
 	}
 }

@@ -28,6 +28,8 @@
 #include "stdio.h"
 #include "string.h"
 #include "BMP280.h"
+#include "ADXL345.h"
+#include "MPU9250.h"
 #include "motor.h"
 #include "define.h"
 #include "shell.h"
@@ -115,9 +117,15 @@ int main(void)
 #endif
 
 #ifdef ADXL345
-	printf("------BMP280------\r\n");
+	printf("------ADXL9250------\r\n");
 	ADXL345_check();
 	ADXL345_init();
+#endif
+
+#ifdef MPU9250
+	printf("------MPU9250------\r\n");
+	MPU9250_check();
+	mpu9250_init();
 #endif
 
 	/* USER CODE END 2 */
@@ -163,11 +171,53 @@ int main(void)
 	}
 	else {
 		char error_message[] = "Erreur lors de la lecture des axes\r\n";
-		HAL_UART_Transmit(&huart1, (uint8_t*)error_message, strlen(error_message), HAL_MAX_DELAY);
+		HAL_UART_Transmit(&huart2, (uint8_t*)error_message, strlen(error_message), HAL_MAX_DELAY);
 	}
 #endif
 
+#ifdef MPU9250
 
+	/*
+	 * SEND DATA
+	 * */
+
+	MPU9250_Data data;
+	char buffer[50];
+
+	// accélération
+	 if (MPU9250_read_accel(&data.accel) == 0) {
+		sprintf(buffer, "Acc: X=%d, Y=%d, Z=%d\n", data.accel.x, data.accel.y, data.accel.z);
+		HAL_UART_Transmit(&huart1, (uint8_t*)buffer, strlen(buffer), HAL_MAX_DELAY);
+	} else {
+		sprintf(buffer, "Erreur de lecture Acc\n");
+		HAL_UART_Transmit(&huart2, (uint8_t*)buffer, strlen(buffer), HAL_MAX_DELAY);
+	}
+
+	HAL_Delay(100);
+
+	// gyroscope
+	if (MPU9250_read_gyro(&data.gyro) == 0) {
+		sprintf(buffer, "Gyro: X=%d, Y=%d, Z=%d\n", data.gyro.x, data.gyro.y, data.gyro.z);
+		HAL_UART_Transmit(&huart1, (uint8_t*)buffer, strlen(buffer), HAL_MAX_DELAY);
+	} else {
+		sprintf(buffer, "Erreur de lecture Gyro\n");
+		HAL_UART_Transmit(&huart2, (uint8_t*)buffer, strlen(buffer), HAL_MAX_DELAY);
+	}
+
+	HAL_Delay(100);
+
+	// magnétomètre
+	if (MPU9250_read_mag(&data.mag) == 0) {
+		sprintf(buffer, "Mag: X=%d, Y=%d, Z=%d\n", data.mag.x, data.mag.y, data.mag.z);
+		HAL_UART_Transmit(&huart1, (uint8_t*)buffer, strlen(buffer), HAL_MAX_DELAY);
+	} else {
+		sprintf(buffer, "Erreur de lecture Mag\n");
+		HAL_UART_Transmit(&huart2, (uint8_t*)buffer, strlen(buffer), HAL_MAX_DELAY);
+	}
+
+	HAL_Delay(500);
+
+#endif
 
 		/*
 		 * COMMUNICATION AVEC RASBERRY PI

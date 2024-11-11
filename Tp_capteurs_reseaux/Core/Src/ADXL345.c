@@ -49,11 +49,11 @@ int  ADXL345_check() {
 
 	// 0xE5 est l'ID attendu pour ADXL345
 	if (data == ADXL345_DEVID_VAL) {
-		printf("Ok\r\n");
+		printf("ADXL345 Ok\r\n");
 		return 1;
 	}
 	else {
-		printf("not Ok!\r\n");
+		printf("ADXL345 not Ok!\r\n");
 		return 1;
 	}
 
@@ -180,7 +180,7 @@ int ADXL345_read_axes(int16_t* x, int16_t* y, int16_t* z) {
     }
     *z = (int16_t)((data[1] << 8) | data[0]);
 
-    printf("X: lu, Y: %lu, Z: %lu\r\n", x, y, z);
+    printf("X: lu, Y: %lu, Z: %\r\n", x, y, z);
     return 0;
 
 }
