@@ -26,7 +26,7 @@ int MPU9250_init();
 int MPU9250_read_accel(SensorData *accel);
 int MPU9250_read_gyro(SensorData *gyro);
 int MPU9250_read_mag(SensorData *mag);
-int MPU9250_who_am_i();
+int MPU9250_check();
 void MPU9250_send_data(MPU9250_Data *data);
 
 
