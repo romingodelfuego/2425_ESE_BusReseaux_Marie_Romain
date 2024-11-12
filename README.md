@@ -146,9 +146,21 @@ Pour cette dernière partie , une fois qu on a récupéré la température et la
 
 Après avoir configurer les capteurs sur le BMP280, on veut configurer l'ADXL345 et le MPU9250 sur le même principe.
 
+#### ADXL345
+
 Tout d'abord interessons nous à l'ADXL345, nous allons créer deux fonctions : ADXL345_check() et ADXL345_init(), de la même manière que pour le BMP280. On ajoute aussi une fonction pour lire les données (x, y, z) : ADXL345_read_axes(int16_t* x, int16_t* y, int16_t* z).
 
+<p align="center">
+  <img src="Images/ADXL345.png" alt="Liste des fonctions de l'ADXL345" width="600" height="auto">
+</p>
+
+#### MPU9250
+
 De la même manière pour le MPU9250 on initialise deux fonctions MPU9250_init() et MPU9250_check() pour initialiser le capteur et le configurer. Puis comme le MPU9250 permet d'obtenir des informations avec un accéléromètre, un gyroscope et un magnétomètre on va établir 3 fonctions pour lire ces différentes données : MPU9250_read_accel(SensorData *accel) MPU9250_read_gyro(SensorData *gyro) MPU9250_read_mag(SensorData *mag). Enfin on va créer une fonction global qui permettra l'envoie de ces données MPU9250_send_data(MPU9250_Data *data). On établit alors une strucutre pour stocker les données en fonction de leur catégorie du capteur SensorData et une strusture pour garder l'ensemble des données MPU9250_Data.
+
+<p align="center">
+  <img src="Images/MPU9250.png" alt="Listes des fonctions du MPU9250" width="600" height="auto">
+</p>
 
 ## TP2 - Interfaçage STM32 - Raspberry
 
