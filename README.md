@@ -166,5 +166,14 @@ Deplus pour perfectionner la configuration on s'intéresse à l'angle tel que do
   <img src="Images/angle.png" alt="Configuration de l'angle en mode manuel" width="600" height="auto">
 </p>
 
+Premièrement on souhaite faire bouger le moteur de 90 degrès dans un sens puis dans l'autre sens pour cela on va créer une fonction permettant de faire bouger le moteur en fonction de l'angle et du sens. Pour cela on va utiliser le pheader qui va permettre de caractériser les informations, dans un premier temps on a choisit de mettre le moteur en mode normal donc StdId = 0x61, enfin on va transmettre les informations sous une liste de 2 éléments donc DLC = 0x02.
 
+<p align="center">
+  <img src="Images/code_moteur.png" alt="Code du fonctionnmeent du moteur" width="600" height="auto">
+</p>
 
+Ensuite on veut faire en sorte que le mouvement du moteur soit proportionnel à la valeur du capteur. Pour cela on va retenir la température au lancement du code puis on va faire bouger le moteur en fonction de la variation de température, le coefficient utilisé pour modéliser cette variation de température est 2. Si la variation est supérieur à 180 degrés alors le moteur tourne dans le sens horaire, à l'inverse si la variation est inférieur à 180 degrés alors le moteur tourne dans le sens imaginaire. 
+
+<p align="center">
+  <img src="Images/moteur_temp.png" alt="Mouvement du moteur en fonction de la température" width="600" height="auto">
+</p>
