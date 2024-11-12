@@ -41,29 +41,29 @@ int BMP280_check() {
 	 * */
 
 	uint8_t buf[1];
-	HAL_StatusTypeDef ret;
 	buf[0] = BMP280_ID_REG;
 	printf("\r\nChecking for BMP280...\r\n");
 
-	ret = HAL_I2C_Master_Transmit(&hi2c1, BMP280_ADDR, buf, 1, HAL_MAX_DELAY);
-	if (ret != 0) {
+
+	if (HAL_I2C_Master_Transmit(&hi2c1, BMP280_ADDR, buf, 1, HAL_MAX_DELAY) != HAL_OK) {
 		printf("Problem with check (I2C Transmit)\r\n");
+		return 1;
 	}
-
-	ret = HAL_I2C_Master_Receive(&hi2c1, BMP280_ADDR, buf, 1,
-			HAL_MAX_DELAY);
-	if (ret != 0) {
+	if (HAL_I2C_Master_Receive(&hi2c1, BMP280_ADDRR, buf, 1, HAL_MAX_DELAY) != HAL_OK) {
 		printf("Problem with check (I2C Receive) \r\n");
+		return 1;
 	}
 
-	printf("Id: 0x%x...", buf[0]);
 	if (buf[0] == BMP280_ID_VAL) {
 		printf("BMP280 Ok\r\n");
 		return 0;
-	} else {
+	}
+	else {
 		printf("BMP280 not Ok!\r\n");
 		return 1;
 	}
+
+
 }
 
 
@@ -126,12 +126,10 @@ int BMP280_init() {
 	 * on écrit 10101011 = 0x54 en héxadécimal dans le registre de controle (BMP280_CTRL_MEAS_REG)
 	 * */
 
-	HAL_StatusTypeDef ret;
 	uint8_t ctrl = (0b010 << 5) | (0b101 << 2) | (0b11);
 
 	printf("\r\nConfigure BMP280...\r\n");
-	ret = BMP280_Write_Reg(BMP280_CTRL_MEAS_REG, ctrl);
-	if (ret == 0) {
+	if (BMP280_Write_Reg(BMP280_CTRL_MEAS_REG, ctrl) == HAL_OK) {
 		printf("Config Ok\r\n");
 	} else {
 		printf("Config not Ok!\r\n");
@@ -148,17 +146,14 @@ int BMP280_Write_Reg(uint8_t reg, uint8_t value) {
 	 * */
 
 	uint8_t buf[3];
-	HAL_StatusTypeDef ret;
 
 	buf[0] = reg;
 	buf[1] = value;
-	ret = HAL_I2C_Master_Transmit(&hi2c1, BMP280_ADDR, buf, 2, HAL_MAX_DELAY);
-	if (ret != 0) {
+	if ( HAL_I2C_Master_Transmit(&hi2c1, BMP280_ADDR, buf, 2, HAL_MAX_DELAY) != 0) {
 		printf("xErreur with I2C Transmit\r\n");
 	}
 
-	ret = HAL_I2C_Master_Receive(&hi2c1, BMP280_ADDR, buf, 1, HAL_MAX_DELAY);
-	if (ret != 0) {
+	if (HAL_I2C_Master_Receive(&hi2c1, BMP280_ADDR, buf, 1, HAL_MAX_DELAY) != 0) {
 		printf("xErreur with I2C Receive\r\n");
 	}
 
@@ -175,17 +170,16 @@ void BMP280_Read_Reg(uint8_t *buf, uint8_t reg, uint8_t length) {
 	 * Fonction pour lire dans un registre en I2C
 	 * */
 
-	HAL_StatusTypeDef ret;
 
-	ret = HAL_I2C_Master_Transmit(&hi2c1, BMP280_ADDR, &reg, 1, HAL_MAX_DELAY);
-	if (ret != 0) {
+	if ( HAL_I2C_Master_Transmit(&hi2c1, BMP280_ADDR, &reg, 1, HAL_MAX_DELAY) != HAL_OK) {
 		printf("xErreur with I2C Transmit\r\n");
+		return 1;
 	}
 
-	ret = HAL_I2C_Master_Receive(&hi2c1, BMP280_ADDR, buf, length,
-			HAL_MAX_DELAY);
-	if (ret != 0) {
+	if ( HAL_I2C_Master_Receive(&hi2c1, BMP280_ADDR, buf, length,
+			HAL_MAX_DELAY) != HAL_OK) {
 		printf("xErreur with I2C Receive\r\n");
+		return 1;
 	}
 }
 

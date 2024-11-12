@@ -64,24 +64,21 @@ int ADXL345_init(){
 	 * Mettre l'ADXL345 en mode de mesure
 	 * */
 
-	HAL_StatusTypeDef ret;
 
-
+	printf("\r\nChecking for ADXL345...\r\n");
 	/*
 	 * Configuration du POWER_CTRL
 	 * */
 
 	uint8_t power_ctl_reg = ADXL345_POWER_CTL;
-	ret = HAL_I2C_Master_Transmit(&hi2c1, ADXL345_ADDR, &power_ctl_reg, 1, HAL_MAX_DELAY);
-	if (ret != HAL_OK) {
+	if (HAL_I2C_Master_Transmit(&hi2c1, ADXL345_ADDR, &power_ctl_reg, 1, HAL_MAX_DELAY) != HAL_OK) {
 		printf("Error while transmitting Power Control register address\r\n");
 		return 1;
 	}
 
 	// Mode de mesure
 	uint8_t data = 0x08;
-	ret = HAL_I2C_Master_Transmit(&hi2c1, ADXL345_ADDR, &data, 1, HAL_MAX_DELAY);
-	if (ret != HAL_OK) {
+	if (HAL_I2C_Master_Transmit(&hi2c1, ADXL345_ADDR, &data, 1, HAL_MAX_DELAY) != HAL_OK) {
 		printf("Error while configuring Power Control register\r\n");
 		return 1;
 	}
@@ -96,14 +93,12 @@ int ADXL345_init(){
 	data = 0x08;
 	uint8_t data_format_reg = ADXL345_DATA_FORMAT;
 
-	ret = HAL_I2C_Master_Transmit(&hi2c1, ADXL345_ADDR, &data_format_reg, 1, HAL_MAX_DELAY);
-	if (ret != HAL_OK) {
+	if (HAL_I2C_Master_Transmit(&hi2c1, ADXL345_ADDR, &data_format_reg, 1, HAL_MAX_DELAY) != HAL_OK) {
 		printf("Error while transmitting Data Format register address\r\n");
 		return 1;
 	}
 
-	ret = HAL_I2C_Master_Transmit(&hi2c1, ADXL345_ADDR, &data, 1, HAL_MAX_DELAY);
-	if (ret != HAL_OK) {
+	if (HAL_I2C_Master_Transmit(&hi2c1, ADXL345_ADDR, &data, 1, HAL_MAX_DELAY) != HAL_OK) {
 		printf("Error while configuring Data Format register\r\n");
 		return 1;
 	}
@@ -113,13 +108,8 @@ int ADXL345_init(){
 
 }
 
-
-
-
 int ADXL345_read_axes(int16_t* x, int16_t* y, int16_t* z) {
 
-
-    HAL_StatusTypeDef ret;
 
     // tableau pour stocker les données 2 donnée par axe
     uint8_t data[2];
@@ -129,15 +119,13 @@ int ADXL345_read_axes(int16_t* x, int16_t* y, int16_t* z) {
      * */
 
     uint8_t reg = ADXL345_DATAX0;
-    ret = HAL_I2C_Master_Transmit(&hi2c1, ADXL345_ADDR, &reg, 1, HAL_MAX_DELAY);
-    if (ret != HAL_OK) {
+    if (HAL_I2C_Master_Transmit(&hi2c1, ADXL345_ADDR, &reg, 1, HAL_MAX_DELAY) != HAL_OK) {
         printf("Error while transmitting X register address\r\n");
         return 1;
     }
 
     // Lire 2 octets (valeur de l'axe X)
-    ret = HAL_I2C_Master_Receive(&hi2c1, ADXL345_ADDR, data, 2, HAL_MAX_DELAY);
-    if (ret != HAL_OK) {
+    if (HAL_I2C_Master_Receive(&hi2c1, ADXL345_ADDR, data, 2, HAL_MAX_DELAY) != HAL_OK) {
         printf("Error while reading X data\r\n");
         return 1;
     }
@@ -149,14 +137,12 @@ int ADXL345_read_axes(int16_t* x, int16_t* y, int16_t* z) {
      * */
 
     reg = ADXL345_DATAY0;
-    ret = HAL_I2C_Master_Transmit(&hi2c1, ADXL345_ADDR, &reg, 1, HAL_MAX_DELAY);
-    if (ret != HAL_OK) {
+    if (HAL_I2C_Master_Transmit(&hi2c1, ADXL345_ADDR, &reg, 1, HAL_MAX_DELAY) != HAL_OK) {
         printf("Error while transmitting Y register address\r\n");
         return 1;
     }
 
-    ret = HAL_I2C_Master_Receive(&hi2c1, ADXL345_ADDR, data, 2, HAL_MAX_DELAY);
-    if (ret != HAL_OK) {
+    if (HAL_I2C_Master_Receive(&hi2c1, ADXL345_ADDR, data, 2, HAL_MAX_DELAY) != HAL_OK) {
         printf("Error while reading Y data\r\n");
         return 1;
     }
@@ -167,14 +153,12 @@ int ADXL345_read_axes(int16_t* x, int16_t* y, int16_t* z) {
      * */
 
     reg = ADXL345_DATAZ0;
-    ret = HAL_I2C_Master_Transmit(&hi2c1, ADXL345_ADDR, &reg, 1, HAL_MAX_DELAY);
-    if (ret != HAL_OK) {
+    if (HAL_I2C_Master_Transmit(&hi2c1, ADXL345_ADDR, &reg, 1, HAL_MAX_DELAY) != HAL_OK) {
         printf("Error while transmitting Z register address\r\n");
         return 1;
     }
 
-    ret = HAL_I2C_Master_Receive(&hi2c1, ADXL345_ADDR, data, 2, HAL_MAX_DELAY);
-    if (ret != HAL_OK) {
+    if (HAL_I2C_Master_Receive(&hi2c1, ADXL345_ADDR, data, 2, HAL_MAX_DELAY) != HAL_OK) {
         printf("Error while reading Z data\r\n");
         return 1;
     }

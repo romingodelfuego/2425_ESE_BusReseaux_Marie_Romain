@@ -24,6 +24,8 @@ uint8_t MPU9250_ID = 0x71;  		// Identifiant du MPU9250
 
 
 int MPU9250_check() {
+	printf("\r\nChecking for MPU9250...\r\n");
+
     uint8_t data = 0;
 
     if (HAL_I2C_Master_Transmit(&hi2c1, MPU9250_ADDR, &MPU9250_ID_REG, 1, HAL_MAX_DELAY) != HAL_OK) {
