@@ -13,11 +13,11 @@ extern CAN_HandleTypeDef hcan1;
 void motor_Angle(ANGLE_SENS sens,uint8_t angle){
 	CAN_TxHeaderTypeDef pHeader =(CAN_TxHeaderTypeDef){
 		.StdId = 0x61,
-		.ExtId = 0x01,
-		.IDE = CAN_ID_STD,
-		.RTR = CAN_RTR_DATA,
-		.DLC = 0x02,
-		.TransmitGlobalTime = DISABLE
+				.ExtId = 0x01,
+				.IDE = CAN_ID_STD,
+				.RTR = CAN_RTR_DATA,
+				.DLC = 0x02,
+				.TransmitGlobalTime = DISABLE
 	};
 	uint32_t pTxMailbox;
 	uint8_t aData[2]={sens,angle};
