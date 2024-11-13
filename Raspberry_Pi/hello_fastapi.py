@@ -54,7 +54,7 @@ async def catch_all(request: Request, full_path: str):
 @app.exception_handler(HTTPException)
 def custom_404_handler(request: Request, exc: HTTPException):
     if exc.status_code == 404:
-        # Si la page n'est pas trouvée, afficher un template personnalisé
+        # Si la page n'est pas trouvée, afficher un template
         return templates.TemplateResponse("page_not_found.html", {"request": request}, status_code=404)
     else:
         return JSONResponse({"detail": exc.detail}, status_code=exc.status_code)

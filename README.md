@@ -1,6 +1,27 @@
+
+## Sommaire
+
+- [Présentation](#présentation)
+- [TP1 - Bus I2C](#tp1--bus-i2c)
+  - [Capteur BMP280](#capteur-bmp280)
+  - [Setup du STM32](#setup-du-stm32)
+  - [Communication I²C](#communication-ic)
+  - [Communication avec le BMP280](#communication-avec-le-bmp280)
+  - [ADXL345 et MPU9250](#adxl345-et-mpu9250)
+- [TP2 - Interfaçage STM32 - Raspberry x & TP3 - Interface REST](#tp2---interfaçage-stm32---raspberry-x--tp3---interface-rest)
+  - [Flash de la SD](#flash-de-la-sd)
+  - [Accès à la Raspberry Pi](#accès-à-la-raspberry-pi)
+  - [Utiliser python sur Rasberry Pi](#utiliser-python-sur-rasberry-pi)
+  - [Communiquer par UART avec la Raspberry](#communiquer-par-uart-avec-la-raspberry)
+  - [BACK-END Raspberry Pi](#back-end-raspberry-pi)
+  - [Astuces](#astuces)
+  - [Server REST - FastAPI](#server-rest---fastapi)
+- [TP4 - Bus CAN](#tp4---bus-can)
+- [TP5 - Intégration](#tp5---intégration)
+
 # TP Bus et Réseaux
 
-Bienvenue sur le ReadMe de Romain Pace et Marie Caronello, élèves en spécialité ESE à l'ENSEA. Ce document présente en détail les étapes de notre TP, avec pour objectif d'approfondir notre compréhension des bus et des réseaux.
+Bienvenue sur le ReadMe de  Marie Caronello et Romain Pace, élèves en spécialité ESE à l'ENSEA. Ce document présente en détail les étapes de notre TP, avec pour objectif d'approfondir notre compréhension des bus et des réseaux.
 
 ## Présentation
 
@@ -60,7 +81,7 @@ Avant de configurer le capteur BMP280 nous allons identifier certains éléments
 
 Ce TP a permis de comprendre les principaux registres et leurs rôles dans la configuration et la lecture des données du capteur BMP280 via le bus I²C. 
 
-###  Setup du STM32
+### Setup du STM32
 
 Dans cette partie, nous avons determiné les broches pour configurer le Bus CAN, l'USART2, l'USART3 et la communication I2C.
 
@@ -146,14 +167,162 @@ Pour cette dernière partie , une fois qu on a récupéré la température et la
 
 Après avoir configurer les capteurs sur le BMP280, on veut configurer l'ADXL345 et le MPU9250 sur le même principe.
 
+#### ADXL345
+
 Tout d'abord interessons nous à l'ADXL345, nous allons créer deux fonctions : ADXL345_check() et ADXL345_init(), de la même manière que pour le BMP280. On ajoute aussi une fonction pour lire les données (x, y, z) : ADXL345_read_axes(int16_t* x, int16_t* y, int16_t* z).
+
+<p align="center">
+  <img src="Images/ADXL345.png" alt="Liste des fonctions de l'ADXL345" width="600" height="auto">
+</p>
+
+#### MPU9250
 
 De la même manière pour le MPU9250 on initialise deux fonctions MPU9250_init() et MPU9250_check() pour initialiser le capteur et le configurer. Puis comme le MPU9250 permet d'obtenir des informations avec un accéléromètre, un gyroscope et un magnétomètre on va établir 3 fonctions pour lire ces différentes données : MPU9250_read_accel(SensorData *accel) MPU9250_read_gyro(SensorData *gyro) MPU9250_read_mag(SensorData *mag). Enfin on va créer une fonction global qui permettra l'envoie de ces données MPU9250_send_data(MPU9250_Data *data). On établit alors une strucutre pour stocker les données en fonction de leur catégorie du capteur SensorData et une strusture pour garder l'ensemble des données MPU9250_Data.
 
-## TP2 - Interfaçage STM32 - Raspberry
+<p align="center">
+  <img src="Images/MPU9250.png" alt="Listes des fonctions du MPU9250" width="600" height="auto">
+</p>
 
-## TP3 - Interface REST
+## TP2 - Interfaçage STM32 - Raspberry x & TP3 - Interface REST
+### Flash de la SD
 
+En utilisant [Rasberry Pi Imager](https://www.raspberrypi.com/software/), on flash la SD avec l'OS: 
+````Raspberry pi OS(other) -> Raspberry pi os lite(32-bit)````
+
+Afin que la carte se connecte à un réseau on renseigne soit :
+- sur l'interface le ssid et le mdp de la wifi  
+- sur le fichier ````wpa_supplicant.conf```` le code suivant (si il n'existe pas créez le):
+````r
+ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev
+update_config=1
+country=FR
+
+network={
+ 	ssid="Bbox-BE3D805C"
+ 	psk="idontlovelinux"
+   	id_str="HOME"
+	priority=1
+}
+
+network={
+ 	ssid="D060-2GHz"
+ 	psk="ilovelinux"
+   	id_str="SCHOOL"
+	priority=2
+}
+````
+
+Ensuite en passant par le finder ou le terminal ajouter un fichier ssh (vide) dans le boot. Puis modifier les fichiers cmdline.txt et config.txt
+````
+touch ssh
+open cmdline.txt
+open config.txt
+````
+Dans le ````cmdline.txt````on enlève ````console=serial0,115200````
+Dans le ````config.txt````on ajoute ````enable_uart=1   dtoverlay=disable-bt````
+
+La carte SD est prête à être connecter pour que la Rasberry Pi se connecte au réseau et reçoive une connexion ssh.
+
+### Accès à la Raspberry Pi
+
+Après avoir alimenté la raspberry pi.
+On souhaite ensuite se connecter en ssh depuis l’ordinateur. Il faut se connecter au même reseau que le ssid renseigné dans la Raspberry.
+On utilise nmap pour repérer l'adresse IP que le routuer a attribué à la  Raspberry Pi. [Nmap Documentation](https://nmap.org/man/fr/man-briefoptions.html) 
+
+````ruby
+nmap 192.168.88.0/24 -sn            #En général ip.du.routeur/24
+````
+> [!TIP]
+> Pour scanner rapidement le reseau il faut être en utilisateur root pour faire cette operation 
+>```ruby 
+> sudo -i
+>```
+
+Dans un environnement où plusieurs raspberry pi sont connectés au même réseau que le notre. Il faut tester un par un les adresses IP jusqu'a trouver la bonne 
+````ruby 
+ssh adresse.ip
+ssh user@adresse.ip                 #Si vous souhaitez vous connectez sur un user, créer au préalable
+````
+
+### Utiliser python sur Rasberry Pi
+Dans notre cas d'apllication nous allons devoir utilsier python et certain packages.
+Pour faire cela, on doit obligatoirement créer un environnement python, autrement il est impossible d'installer des packages python.
+````ruby
+python -m venv defaut               #Création de l'environnement "defaut"
+source defaut/bin/activate          # Activation de l'environnement
+pip install requirement.txt      #Installation des requirement sur l'environnement "defaut"
+````
+Un fois que l'environnement est créer et activer alors il nous tout a fait possible d'installer les packages. Prenez garde a bien activer votre envrionnement a chaque redémarrage de la rasbery pi
+### Communiquer par UART avec la Raspberry
+Pour communiquer avec la rasberry pi on peut utiliser minicom
+````ruby 
+sudo apt install minicom
+minicom -D /dev/ttyAMA0
+````
+ou screen une fonction native sous Linux
+```` ruby
+sudo apt install screen
+screen /dev/ttyAMA0 115200 
+````
+> [!CAUTION]
+> En utilisant cette methode veillez à bien fermer le screen en fin d'utilisation. 
+
+### BACK-END Raspberry Pi 
+
+Après avoir coder le back-end du raspberry, ce qu'il faut comprendre c'est que l'interface via le web ne permet d'aucune sorte de créer des requêtes.
+
+Pour faire cela on va devoir utiliser la fonction CURL du terminal en choissiant la méthode l'adresse ip et les arguments ````suivant -d````
+````ruby
+curl -X POST http://192.168.88.234:5000/api/welcome/ -d "welcome" 
+````
+Cette commande post sur l’adresse /api/welcome/ l’argument welcome. Ensuite pour recupérer les données coté raspberry on doit utilisé ````request.get()````
+
+### Astuces
+Pour éviter de coder sur le nano du Rasberry pi, qui est ni ergonomique, ni facile d'utilisation. On peut choisir de coder sur son laptop avec VSCode par exemple puis de upload les fichiers sur la raspberry [SCP documentation](https://raspberry-pi.fr/transferer-fichiers-raspberry-ssh/).
+
+Pour transférer un fichier ou un dossier:
+```` ruby
+#Permet de transférer un fichier depuis le laptop vers le Raspberry 
+    scp mainSurPC.py 192.168.88.234:/home/romingo/server/mainSurRasb.py 
+#Permet de transférer un dossier depuis le laptop vers le Raspberry
+    scp -r ~/serverSurPC 192.168.88.234:/home/romingo/serverSurRasp
+```` 
+
+### Server REST - FastAPI
+
+Pour utiliser fastapi, l faut installer sur l'environnement "defaut" ````fastapi[standard]````. On conseille de stocker cela sur le requirements.txt.
+
+Pour lire correctement le code d'une page fastAPI, il faut repérer le décorateur au dessus de chaque fonction. Celui definit quand est ce que la fonction va être executé, pour un POST, un GET ou autre.
+
+Ensuite l'argument de la fonction est fourni par fastAPI à la fonction. Ci dessus on demande la requete reçu lors d'une requête GET sur la page ````.../pres````, celle ci contient plusieurs attributs intéressants que nous renverrons en sortie de la fonction. 
+
+````python
+@app.GET('/pres')
+def return_all_previous_presure(request: Request):
+  	return {"pressure": pres,"method": request.method}
+  
+````
+
+Afin de gérer les erreurs 404 on utilisera les ````HTTPException````et le ````@app.exception_handler(HTTPException)````. On décide ici de rediriger l'utilisateur sur une page html customisé.
+
+````python
+@app.exception_handler(HTTPException)
+def custom_404_handler(request:  Request, exc:  HTTPException): 
+    if exc.status_code == 404: 
+        return templates.TemplateResponse("page_not_found.html", {"request":  request}, status_code=404)
+    else: 
+        return JSONResponse({"detail":  exc.detail}, status_code=exc.status_code)
+
+````
+
+On choisit également de traiter toute les pages non attribuées que l'utilisateur pourrait essayer d'accéder.
+````python 
+@app.get("/{full_path: path}")
+async def catch_all_url(request:  Request, full_path:  str): 
+    raise HTTPException(status_code=404, detail=f"Page '{full_path}' non trouvée")
+````
+
+Afin d'apercevoir le résultat de cette intégration: cf [TP5 - Integration](#tp5---intégration) 
 ## TP4 - Bus CAN
 
 L'objectif ici est de mettre en place un périphérique sur un bus CAN entre le moteur et la carte STM32L476. On devra donc ici réussir à piloter un module moteur pas-à-pas alimenté en 12V via le bus CAN, en réglant la vitesse de communication à 500 kbit/s, en prenant en compte des spécificités techniques liées au ratio de timing CAN.
@@ -177,3 +346,23 @@ Ensuite on veut faire en sorte que le mouvement du moteur soit proportionnel à 
 <p align="center">
   <img src="Images/moteur_temp.png" alt="Mouvement du moteur en fonction de la température" width="600" height="auto">
 </p>
+
+
+## TP5 - Intégration 
+
+Interface homme-machine se fait au travers du fastapi qui permet d'envoyer des requete au server python directement depuis la page http://.../docs 
+
+<p align="center">
+  <img src="Images/FastAPI.png" alt="Interface FastAPI" width="600" height="auto">
+</p>
+
+
+Apres avoir envoyé une requête GET_T, on reçoit la température provenant de la stm32
+
+<p align="center">
+  <img src="Images/GET_T.png" alt="Réponse de la GET_T" width="600" height="auto">
+</p>
+
+
+
+[ ]
