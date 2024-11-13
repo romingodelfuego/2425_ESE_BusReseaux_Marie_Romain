@@ -18,6 +18,7 @@
   - [Server REST - FastAPI](#server-rest---fastapi)
 - [TP4 - Bus CAN](#tp4---bus-can)
 - [TP5 - Intégration](#tp5---intégration)
+- [Auteurs](#auteurs)
 
 # TP Bus et Réseaux
 
@@ -364,5 +365,5 @@ Apres avoir envoyé une requête GET_T, on reçoit la température provenant de 
 </p>
 
 
-
-[ ]
+## Auteurs
+Marie Caronello (marie.caronello@ensea.fr) - Romain Pace (romain.pace@ensea.fr)
